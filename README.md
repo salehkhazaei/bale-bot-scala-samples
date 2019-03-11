@@ -1,43 +1,17 @@
 <p align="center">
-  <img src="logo.png" title="TelegramBot4s">
+  <img src="logo.png" title="BaleBot4s">
 </p>
 <p align="center">
   <i>
     Idiomatic Scala wrapper for the
-    <a href="https://core.telegram.org/bots/api" title="Telegram Bot API">
-      Telegram Bot API
+    <a href="https://core.telegram.org/bots/api" title="Telegram & Bale  Bot API">
+      Telegram & Bale Bot API
     </a>
   </i>
 </p>
 
-<p align="center">
-  <a href="https://core.telegram.org/bots/api#recent-changes" title="Telegram Bot API">
-    <img src="https://img.shields.io/badge/Bot%20API-4.0%20(July%2026%2C%202018)-00aced.svg"/>
-  </a>
-  <a href="https://t.me/bot4s_updates" title="Bot4s Telegram Channel">
-    <img src="https://img.shields.io/badge/💬%20Channel-Bot4s-00aced.svg"/>
-  </a>
-  <a href="https://t.me/bot4s" title="Bot4s Telegram Group">
-    <img src="https://img.shields.io/badge/💬%20Group-Bot4s-00aced.svg"/>
-  </a>
-</p>
-<p align="center">
-  <a href="https://travis-ci.org/bots4s/telegram" title="Travis CI Build Status">
-    <img src="https://travis-ci.org/bot4s/telegram.svg"/>
-  </a>
-  <a href="https://www.codacy.com/app/mukel/telegram?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=bot4s/telegram&amp;utm_campaign=Badge_Grade" title="Codacy Badge">
-    <img src="https://api.codacy.com/project/badge/Grade/c90c7f7c287445eea233e304372a68fc"/>
-  </a>
-  <a href="https://maven-badges.herokuapp.com/maven-central/com.bot4s/telegram-core_2.12" title="Maven Central">
-    <img src="https://maven-badges.herokuapp.com/maven-central/com.bot4s/telegram-core_2.12/badge.svg"/>
-  </a>
-  <a href="http://www.apache.org/licenses/LICENSE-2.0.html" title="License">
-    <img src="https://img.shields.io/badge/license-Apache%202-blue.svg"/>
-  </a>
-</p>
-
-# bot4s.telegram
-Simple, extensible, strongly-typed wrapper for the [Telegram Bot API](https://core.telegram.org/bots/api).
+# bot4s.bale
+Simple, extensible, strongly-typed wrapper for the [ Telegram & Bale Bot API](https://core.telegram.org/bots/api).
 
 The current version is experimental, feel free to report bugs, for a stable (but a bit outdated) version, please check https://github.com/bot4s/telegram/tree/91f51fc9bddf6daaf21ee1e1629b0471723db591 .
 
@@ -48,7 +22,6 @@ Table of contents
 - [Leaking bot tokens](#leaking-bot-tokens)
 - [Webhooks vs Polling](#webhooks-vs-polling)
 - [Payments](#payments)
-- [Games](#games)
 - [Deployment (or how to turn a spare phone into a Telegram Bot)](#deployment)
 - [Running the examples](#running-the-examples)
 - [A note on implicits](#a-note-on-implicits)
@@ -93,13 +66,6 @@ For a comprehensive reference check [Marvin's Patent Pending Guide to All Things
 ## Payments
 Payments are supported since version 3.0; refer to [official payments documentation](https://core.telegram.org/bots/payments) for details.
 I'll support developers willing to integrate and/or improve the payments API; please report issues [here](https://github.com/bot4s/telegram/issues/new).
-
-## Games
-The Akka extensions include support for games in two flavors; self-hosted (served by the bot itself),
-and external, hosted on e.g. GitHub Pages.
-Check both the [self-hosted](https://github.com/bot4s/telegram/blob/master/examples/src-jvm/main/scala/SelfHosted2048Bot.scala) and
-[GitHub-hosted](https://github.com/bot4s/telegram/blob/master/examples/src-jvm/main/scala/GitHubHosted2048Bot.scala) versions of the
-popular [2048](https://gabrielecirulli.github.io/2048/) game.
 
 ## Deployment
 I've managed to run bots on a Raspberry Pi 2, Heroku, Google App Engine  
@@ -147,7 +113,7 @@ import com.bot4s.telegram.api.Polling
 class RandomBot(val token: String) extends TelegramBot
   with Polling
   with Commands {
-  val client = new ScalajHttpClient(token)
+  val client = new ScalajHttpClient(token,"tapi.bale.ai")
   val rng = new scala.util.Random(System.currentTimeMillis())
   onCommand("coin" or "flip") { implicit msg =>
     reply(if (rng.nextBoolean()) "Head!" else "Tail!")
@@ -191,7 +157,7 @@ object TextToSpeechBot extends TelegramBot
   with Commands
   with ChatActions {
 
-  override val client = new ScalajHttpClient("BOT_TOKEN")
+  override val client = new ScalajHttpClient("BOT_TOKEN","tapi.bale.ai")
 
   def ttsUrl(text: String): String =
     s"http://translate.google.com/translate_tts?client=tw-ob&tl=en-us&q=${URLEncoder.encode(text, "UTF-8")}"
@@ -228,7 +194,7 @@ Await.result(eol, Duration.Inf) // ScalaJs wont't let you do this
 object LmgtfyBot extends AkkaTelegramBot
   with Webhook 
   with Commands {
-  val client = new AkkaHttpClient(TOKEN)  
+  val client = new AkkaHttpClient(TOKEN,"tapi.bale.ai")  
   override val port = 8443
   override val webhookUrl = "https://1d1ceb07.ngrok.io"
   onCommand("lmgtfy") { implicit msg =>
