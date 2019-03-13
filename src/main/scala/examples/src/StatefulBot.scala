@@ -20,7 +20,7 @@ trait PerChatState[S] {
     f
   }
 
-  def withChatState(f: Option[S] => Unit)(implicit msg: Message): Unit = f(getChatState)
+  def withChatState[T](f: Option[S] => T)(implicit msg: Message): T = f(getChatState)
 
   def getChatState(implicit msg: Message): Option[S] = atomic {
     chatState.get(msg.chat.id)
