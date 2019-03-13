@@ -7,9 +7,12 @@ import com.bot4s.telegram.api.declarative.Commands
 import com.bot4s.telegram.methods._
 import com.bot4s.telegram.models._
 import com.mesr.bot.Strings._
+import io.circe.{Decoder, Encoder}
 import io.circe.parser._
 import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
+import io.circe.generic.semiauto._
 
+import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 class AftabeBot(token: String)(implicit _system: ActorSystem)
@@ -25,7 +28,20 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
     with GameHelper
 {
   override val system: ActorSystem = _system
+  override val ec: ExecutionContext = executionContext
+
+  implicit val userStateEncoder: Encoder[UserState] = deriveEncoder[UserState]
+  implicit val userStateDecoder: Decoder[UserState] = deriveDecoder[UserState]
+
+  implicit val gameStateEncoder: Encoder[GameState] = deriveEncoder[GameState]
+  implicit val gameStateDecoder: Decoder[GameState] = deriveDecoder[GameState]
+
+  override implicit val encoder: Encoder[AftabeState] = deriveEncoder[AftabeState]
+  override implicit val decoder: Decoder[AftabeState] = deriveDecoder[AftabeState]
+
   implicit val mat = ActorMaterializer()
+
+  initializeState
 
   LoggerConfig.factory = PrintLoggerFactory()
   LoggerConfig.level = LogLevel.TRACE

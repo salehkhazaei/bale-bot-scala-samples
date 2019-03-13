@@ -11,6 +11,7 @@ libraryDependencies += "com.bot4s" %% "telegram-core" % "4.0.0-RC2" withSources 
 libraryDependencies += "com.bot4s" %% "telegram-akka" % "4.0.0-RC2" withSources ()
 
 libraryDependencies += "ch.megard" %% "akka-http-cors" % "0.4.0"
+libraryDependencies += "net.debasishg" %% "redisclient" % "3.4"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-slf4j" % "2.5.19"
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.5.19"
