@@ -10,7 +10,7 @@ import com.mesr.bot.Constants
 trait LevelHelper extends StateHelper with TelegramBot with Constants {
 
   def nextLevel(implicit msg: Message): Unit = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       val newState = currentState
         .copy(gameState = defaultGame(currentState.gameState.level + 1))
 
@@ -19,7 +19,7 @@ trait LevelHelper extends StateHelper with TelegramBot with Constants {
   }
 
   def withCheckFinished[T](f: => T)(implicit msg: Message): T = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (_, currentLevel) =>
       if (currentLevel.isDefined) {
         f
       } else {

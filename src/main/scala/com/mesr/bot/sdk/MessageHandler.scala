@@ -12,7 +12,6 @@ trait MessageHandler extends TelegramBot with Commands with StrictLogging {
 
   private val filters = mutable.ArrayBuffer[TextFilter]()
   private var defaultFilter: Option[Message => Unit] = None
-  private var filterAll: Option[Message => Unit] = None
 
   def onTextFilter(filter: String)(f: Message => Unit): Unit = {
     val filterFunction: String => Boolean = { msg =>

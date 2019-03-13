@@ -35,7 +35,7 @@ trait BalePolling extends BotBase with BotExecutionContext with StrictLogging {
   /**
     * The polling method, overload for custom behavior, e.g. back-off, retries...
     *
-    * @param offset
+    * @param offset offset of polling
     */
   def pollingGetUpdates(offset: Option[Long]): Future[Seq[Update]] = {
     after(1.second, system.scheduler) {
@@ -89,9 +89,9 @@ trait BalePolling extends BotBase with BotExecutionContext with StrictLogging {
     logger.info(s"Starting (long) polling: timeout=$pollingTimeout seconds")
     polling = poll(Future.successful((None, Seq()))).map(_ ⇒ ())
     polling.onComplete {
-      case _ ⇒
+      _ ⇒
         logger.info("Long polling terminated")
-        startPolling
+        startPolling()
     }
     polling
   }

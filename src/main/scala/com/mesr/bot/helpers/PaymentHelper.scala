@@ -36,7 +36,7 @@ trait PaymentHelper extends StateHelper with TelegramBot with Constants {
 
   def successfulPayment(amount: Long)(implicit msg: Message): Unit = {
     val paidCoinCount = coinAmounts.find(_._2 == amount).get._1
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       val newCoinCount = currentState.userState.coinCount + paidCoinCount
       val newState = currentState
         .copy(userState = currentState.userState.copy(coinCount = newCoinCount))
