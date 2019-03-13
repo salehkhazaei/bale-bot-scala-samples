@@ -30,3 +30,4 @@ credentials.*
 .DS_Store
 
 project/target
+conf/server.conf
