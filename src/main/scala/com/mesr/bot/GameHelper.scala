@@ -1,13 +1,13 @@
-package examples.src
+package com.mesr.bot
 
 import akka.actor.ActorSystem
+import akka.pattern.after
 import com.bot4s.telegram.methods.{SendMessage, SendPhoto}
 import com.bot4s.telegram.models.InputFile.FileId
 import com.bot4s.telegram.models.{KeyboardButton, Message, ReplyKeyboardMarkup}
-import examples.src.Strings._
+import com.mesr.bot.Strings._
 
 import scala.concurrent.duration._
-import akka.pattern.after
 
 trait GameHelper extends StateHelper with LevelHelper {
 

@@ -1,16 +1,19 @@
+package com.mesr.bot
+
 import akka.actor.ActorSystem
-import com.bot4s.telegram.api.Polling
+import akka.stream.ActorMaterializer
+import com.bot4s.telegram.api.{Polling, RequestHandler, TelegramBot}
 import com.bot4s.telegram.api.declarative.Commands
 import com.bot4s.telegram.methods._
 import com.bot4s.telegram.models._
-import examples.src.Strings._
-import examples.src._
+import com.mesr.bot.Strings._
 import io.circe.parser._
+import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
 
 import scala.util.Try
 
 class AftabeBot(token: String)(implicit _system: ActorSystem)
-  extends ExampleBot(token)(_system)
+  extends TelegramBot
     with Polling
     with FixedPolling
     with Commands
@@ -21,8 +24,13 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
     with MessageHandler
     with GameHelper
 {
-
   override val system: ActorSystem = _system
+  implicit val mat = ActorMaterializer()
+
+  LoggerConfig.factory = PrintLoggerFactory()
+  LoggerConfig.level = LogLevel.TRACE
+
+  override val client: RequestHandler = new BaleAkkaHttpClient(token,"tapi.bale.ai")
 
   onCommand("/start") { implicit msg =>
     request(SendMessage(msg.source, helloMessageStr))

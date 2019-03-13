@@ -1,15 +1,15 @@
-package examples.src
+package com.mesr.bot
 
 import akka.actor.ActorSystem
+import akka.pattern.after
 import com.bot4s.telegram.api.TelegramBot
 import com.bot4s.telegram.methods.SendMessage
 import com.bot4s.telegram.models.{KeyboardButton, Message, ReplyKeyboardMarkup}
-import examples.src.Strings.{buyStr, insufficientAmountStr, showSomeCharNotAllowedStr, showWordStr}
+import com.mesr.bot.Strings.{buyStr, insufficientAmountStr, showSomeCharNotAllowedStr, showWordStr}
 
 import scala.concurrent.Future
-import scala.util.Random
 import scala.concurrent.duration._
-import akka.pattern.after
+import scala.util.Random
 
 trait HintHelper extends StateHelper with TelegramBot with Constants with LevelHelper with GameHelper {
 

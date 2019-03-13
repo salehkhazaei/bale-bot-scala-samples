@@ -1,4 +1,4 @@
-package examples.src
+package com.mesr.bot
 
 import java.nio.file.{Files, Paths}
 

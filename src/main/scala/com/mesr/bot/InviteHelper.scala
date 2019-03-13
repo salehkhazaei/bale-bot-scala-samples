@@ -1,14 +1,14 @@
-package examples.src
+package com.mesr.bot
 
 import akka.actor.ActorSystem
+import akka.pattern.after
 import com.bot4s.telegram.api.TelegramBot
 import com.bot4s.telegram.methods.SendMessage
 import com.bot4s.telegram.models.Message
-import examples.src.Strings.{enterInviteCodeStr, inviteStr}
+import com.mesr.bot.Strings.{enterInviteCodeStr, inviteStr}
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
-import akka.pattern.after
 
 trait InviteHelper extends StateHelper with TelegramBot {
   def sendInviteCode()(implicit msg: Message): Unit = {

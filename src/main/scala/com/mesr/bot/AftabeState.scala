@@ -1,4 +1,4 @@
-package examples.src
+package com.mesr.bot
 
 case class AftabeState(userState: UserState, gameState: GameState)
 

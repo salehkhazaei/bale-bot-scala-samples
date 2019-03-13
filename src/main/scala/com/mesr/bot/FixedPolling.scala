@@ -1,12 +1,11 @@
-package examples.src
+package com.mesr.bot
 
 import akka.actor.ActorSystem
+import akka.pattern.after
 import com.bot4s.telegram.api.Polling
 import com.bot4s.telegram.models.Update
 
 import scala.concurrent.Future
-import akka.pattern.after
-
 import scala.concurrent.duration._
 
 trait FixedPolling extends Polling {
