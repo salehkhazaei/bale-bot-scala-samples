@@ -65,7 +65,7 @@ trait GameHelper extends StateHelper with LevelHelper {
   def successGuess(implicit msg: Message): Unit = {
     nextLevel
 
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       val currentCoin = currentState.userState.coinCount
 
       val newState = currentState
@@ -77,7 +77,7 @@ trait GameHelper extends StateHelper with LevelHelper {
   }
 
   def wrongGuess(implicit msg: Message): Unit = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       val currentGuessCount = currentState.gameState.guessCount
 
       val newState = currentState

@@ -2,11 +2,11 @@ package com.mesr.bot.helpers
 
 import com.bot4s.telegram.models.Message
 import com.mesr.bot._
-import com.mesr.bot.sdk.PerChatState
+import com.mesr.bot.sdk.StatefulBot
 
 import scala.util.Try
 
-trait StateHelper extends PerChatState[AftabeState] with Constants {
+trait StateHelper extends StatefulBot[AftabeState] with Constants {
 
   def defaultGame(level: Int = 0) = GameState(level, 0, Seq.empty)
 

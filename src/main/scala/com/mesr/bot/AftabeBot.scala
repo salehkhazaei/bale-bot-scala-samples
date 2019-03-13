@@ -2,25 +2,24 @@ package com.mesr.bot
 
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import com.bot4s.telegram.api.{Polling, RequestHandler, TelegramBot}
 import com.bot4s.telegram.api.declarative.Commands
+import com.bot4s.telegram.api.{RequestHandler, TelegramBot}
 import com.bot4s.telegram.methods._
 import com.bot4s.telegram.models._
 import com.mesr.bot.Strings._
 import com.mesr.bot.helpers._
-import com.mesr.bot.sdk.{BaleAkkaHttpClient, FixedPolling, MessageHandler}
-import io.circe.{Decoder, Encoder}
-import io.circe.parser._
-import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
+import com.mesr.bot.sdk.{BaleAkkaHttpClient, BalePolling, MessageHandler}
 import io.circe.generic.semiauto._
+import io.circe.parser._
+import io.circe.{Decoder, Encoder}
+import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
 
 import scala.concurrent.ExecutionContext
 import scala.util.Try
 
 class AftabeBot(token: String)(implicit _system: ActorSystem)
   extends TelegramBot
-    with Polling
-    with FixedPolling
+    with BalePolling
     with Commands
     with InviteHelper
     with PaymentHelper
@@ -41,7 +40,7 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
   override implicit val encoder: Encoder[AftabeState] = deriveEncoder[AftabeState]
   override implicit val decoder: Decoder[AftabeState] = deriveDecoder[AftabeState]
 
-  implicit val mat = ActorMaterializer()
+  implicit val mat: ActorMaterializer = ActorMaterializer()
 
   initializeState
 

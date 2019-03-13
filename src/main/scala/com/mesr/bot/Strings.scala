@@ -54,8 +54,8 @@ object Strings {
     """.stripMargin
 
   def showWordStr(response: String): String = "جواب: *" + response + "*"
-  def wonStr(wonCoin: Int) = "*حدس شما درست بود. شما برنده " + wonCoin + " سکه شدید.*"
+  def wonStr(wonCoin: Int): String = "*حدس شما درست بود. شما برنده " + wonCoin + " سکه شدید.*"
   def coinBuyButtonStr(coinCount: Int): String = coinBuyButtonStartStr + coinCount + coinBuyButtonEndStr
   def coinBuyLabelStr(coinCount: Int): String = "خرید " + coinCount + " سکه بازی آفتابه"
-  def coinStr(coinCount: Int) = "تعداد سکه‌های شما: " + coinCount
+  def coinStr(coinCount: Int): String = "تعداد سکه‌های شما: " + coinCount
 }

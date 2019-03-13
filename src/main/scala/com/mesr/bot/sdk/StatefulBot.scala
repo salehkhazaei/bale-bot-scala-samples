@@ -14,7 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
   * The main issue is locking/synchronization, actors (FSM) are a better alternative.
   * This can be easily adapted to handle per-user or per-user+chat state.
   */
-trait PerChatState[S] {
+trait StatefulBot[S] {
   val system: ActorSystem
   val ec: ExecutionContext
   implicit val encoder: Encoder[S]
@@ -23,10 +23,10 @@ trait PerChatState[S] {
   private val chatState = collection.mutable.Map[Long, S]()
   lazy val redisExt = RedisExtension(system)
 
-  def initializeState = load.map { chatStateMap =>
+  def initializeState: Future[Seq[Option[S]]] = load.map { chatStateMap =>
     chatStateMap.map { entry =>
       chatState.put(entry._1, entry._2)
-    }
+    }.toSeq
   }(ec)
 
   def load: Future[Map[Long, S]] = {

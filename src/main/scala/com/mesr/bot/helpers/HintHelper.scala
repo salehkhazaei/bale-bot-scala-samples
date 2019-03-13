@@ -15,13 +15,13 @@ import scala.util.Random
 trait HintHelper extends StateHelper with TelegramBot with Constants with LevelHelper with GameHelper {
 
   def checkCoins(limit: Int)(implicit msg: Message): Boolean = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       currentState.userState.coinCount >= limit
     }
   }
 
   def subtractCoins(price: Int)(implicit msg: Message): Unit = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       val newCurrentState = currentState
         .copy(userState = currentState.userState.copy(
           coinCount = currentState.userState.coinCount - price
@@ -76,7 +76,7 @@ trait HintHelper extends StateHelper with TelegramBot with Constants with LevelH
     if (checkCoins(showWordPrice)) {
       subtractCoins(showWordPrice)
 
-      withCurrentState { (currentState, currentLevel) =>
+      withCurrentState { (_, currentLevel) =>
         request(SendMessage(msg.source, showWordStr(currentLevel.get.response)))
       }
 

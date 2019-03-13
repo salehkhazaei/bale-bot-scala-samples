@@ -16,7 +16,7 @@ trait InviteHelper extends StateHelper with TelegramBot {
   }
 
   def enterInviteCode()(implicit system: ActorSystem, msg: Message): Unit = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       after(1.second, system.scheduler) {
         val newState = currentState.copy(userState = currentState.userState.copy(isEnteringInviteCode = true))
 
@@ -28,7 +28,7 @@ trait InviteHelper extends StateHelper with TelegramBot {
   }
 
   def exitEnteringInviteCode()(implicit msg: Message): Unit = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       val newState = currentState.copy(userState = currentState.userState.copy(isEnteringInviteCode = false))
 
       setChatState(newState)
@@ -36,7 +36,7 @@ trait InviteHelper extends StateHelper with TelegramBot {
   }
 
   def setInviter(inviter: Long)(implicit msg: Message): Unit = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       val newState = currentState.copy(userState = currentState.userState.copy(invitedBy = Some(inviter)))
 
       setChatState(newState)
@@ -44,7 +44,7 @@ trait InviteHelper extends StateHelper with TelegramBot {
   }
 
   def isEnteringInviteCode()(implicit msg: Message): Boolean = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       currentState.userState.isEnteringInviteCode
     }
   }
@@ -54,7 +54,7 @@ trait InviteHelper extends StateHelper with TelegramBot {
   }
 
   def canSetInviter()(implicit msg: Message): Boolean = {
-    withCurrentState { (currentState, currentLevel) =>
+    withCurrentState { (currentState, _) =>
       currentState.userState.invitedBy.isEmpty
     }
   }
