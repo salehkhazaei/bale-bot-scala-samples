@@ -37,6 +37,8 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
     """.stripMargin
 
   val enterYourResponseStr = "کلمه مورد نظر خود را وارد کن:"
+  val noOfCoinsStr = "تعداد سکه شما:‌ "
+  val levelStr = "مرحله "
   val guidMessageStr = "راهنما"
   val wrongGuessStr = "*حدس شما اشتباه بود*"
   val wonCoin = 50
@@ -92,6 +94,8 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
           val responseText =
             s"""
                |${if (wrongGuess) wrongGuessStr else ""}
+               |$noOfCoinsStr *${currentState.userState.coinCount}*
+               |$levelStr ${currentState.gameState.level + 1}
                |${createResponse(currentState.gameState)}
                |$enterYourResponseStr
           """.stripMargin
