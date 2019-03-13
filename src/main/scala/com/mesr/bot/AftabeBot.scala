@@ -7,6 +7,8 @@ import com.bot4s.telegram.api.declarative.Commands
 import com.bot4s.telegram.methods._
 import com.bot4s.telegram.models._
 import com.mesr.bot.Strings._
+import com.mesr.bot.helpers._
+import com.mesr.bot.sdk.{BaleAkkaHttpClient, FixedPolling, MessageHandler}
 import io.circe.{Decoder, Encoder}
 import io.circe.parser._
 import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}

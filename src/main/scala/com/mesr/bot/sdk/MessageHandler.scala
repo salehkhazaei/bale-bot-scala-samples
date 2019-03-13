@@ -1,4 +1,4 @@
-package com.mesr.bot
+package com.mesr.bot.sdk
 
 import com.bot4s.telegram.api.TelegramBot
 import com.bot4s.telegram.api.declarative.Commands

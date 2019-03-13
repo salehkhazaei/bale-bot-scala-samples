@@ -1,9 +1,10 @@
-package com.mesr.bot
+package com.mesr.bot.helpers
 
 import com.bot4s.telegram.api.TelegramBot
 import com.bot4s.telegram.methods.{SendInvoice, SendMessage}
 import com.bot4s.telegram.models._
 import com.mesr.bot.Strings._
+import com.mesr.bot.Constants
 
 trait PaymentHelper extends StateHelper with TelegramBot with Constants {
 

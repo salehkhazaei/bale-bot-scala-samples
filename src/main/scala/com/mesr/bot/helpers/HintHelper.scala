@@ -1,4 +1,4 @@
-package com.mesr.bot
+package com.mesr.bot.helpers
 
 import akka.actor.ActorSystem
 import akka.pattern.after
@@ -6,6 +6,7 @@ import com.bot4s.telegram.api.TelegramBot
 import com.bot4s.telegram.methods.SendMessage
 import com.bot4s.telegram.models.{KeyboardButton, Message, ReplyKeyboardMarkup}
 import com.mesr.bot.Strings.{buyStr, insufficientAmountStr, showSomeCharNotAllowedStr, showWordStr}
+import com.mesr.bot.Constants
 
 import scala.concurrent.Future
 import scala.concurrent.duration._

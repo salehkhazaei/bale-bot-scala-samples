@@ -1,4 +1,4 @@
-package com.mesr.bot.db
+package com.mesr.bot.sdk.db
 
 import java.util.concurrent.TimeUnit
 
@@ -7,7 +7,7 @@ import akka.pattern.ask
 import akka.routing.FromConfig
 import akka.util.Timeout
 import ObjectSerializer._
-import com.mesr.bot.db.entities._
+import com.mesr.bot.sdk.db.entities._
 import io.circe.{Decoder, Encoder}
 
 import scala.concurrent.{ExecutionContext, Future}

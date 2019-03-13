@@ -1,4 +1,4 @@
-package com.mesr.bot.db
+package com.mesr.bot.sdk.db
 import io.circe.parser._
 import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
