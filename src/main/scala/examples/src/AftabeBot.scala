@@ -1,15 +1,15 @@
 import akka.actor.ActorSystem
+import akka.pattern.after
 import com.bot4s.telegram.api.Polling
-import com.bot4s.telegram.api.declarative.{Callbacks, Commands}
+import com.bot4s.telegram.api.declarative.Commands
 import com.bot4s.telegram.methods._
 import com.bot4s.telegram.models.InputFile.FileId
 import com.bot4s.telegram.models._
 import examples.src._
 
-import scala.concurrent.duration._
-import akka.pattern.after
-
 import scala.concurrent.Future
+import scala.concurrent.duration._
+import io.circe.parser._
 import scala.util.{Random, Try}
 
 case object GameFinished extends RuntimeException("Game has finished")
@@ -62,6 +62,11 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
   val coinBuyButtonEndStr = " سکه"
   def coinBuyButtonStr(coinCount: Int): String = coinBuyButtonStartStr + coinCount + coinBuyButtonEndStr
   def coinBuyLabelStr(coinCount: Int): String = "خرید " + coinCount + " سکه بازی آفتابه"
+  def successfulPaymentStr(paidCoinCount: Int, newCoinCount: Int): String =
+    s"""
+      |شما $paidCoinCount سکه خریده‌اید.
+      |تعداد کد سکه‌ها: $newCoinCount
+    """.stripMargin
 
   def coinStr(coinCount: Int) = "تعداد سکه‌های شما: " + coinCount
 
@@ -291,15 +296,38 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
       chatId = msg.source,
       title = coinBuyButtonStr(coinCount),
       description = "",
-      payload = "payload",
+      payload = "buy_" + coinCount,
       providerToken = gameCardNo, startParameter = gameCardNo,
       currency = Currency.YER,
       prices = Array(LabeledPrice(label = coinBuyLabelStr(coinCount), coinAmounts(coinCount)))
     ))
   }
 
+  def successfulPayment(amount: Long)(implicit msg: Message): Unit = {
+    val paidCoinCount = coinAmounts.find(_._2 == amount).get._1
+    withCurrentState { (currentState, currentLevel) =>
+      val newCoinCount = currentState.userState.coinCount + paidCoinCount
+      val newState = currentState
+        .copy(userState = currentState.userState.copy(coinCount = newCoinCount))
+
+      setChatState(newState)
+      request(SendMessage(msg.source, successfulPaymentStr(paidCoinCount, newCoinCount)))
+    }
+  }
+
   onMessage { implicit msg =>
     withCheckFinished {
+      msg.successfulPayment match {
+        case Some(payment) =>
+          val json = parse(payment.invoicePayload)
+          val jsMap = json.right.toOption.flatMap(_.asObject).map(_.toMap).getOrElse(Map.empty)
+
+          if (jsMap.get("status").flatMap(_.asString).getOrElse("FAILURE") == "SUCCESS") {
+            successfulPayment(payment.totalAmount)
+          }
+        case _ =>
+      }
+
       msg.text match {
         case Some(command) if command.startsWith("/") => //ignore commands
 
@@ -350,6 +378,7 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
               sendCurrentGame(wrongGuess = true)
             }
           }
+        case _ =>
       }
     }
   }

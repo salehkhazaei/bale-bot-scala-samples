@@ -2,6 +2,7 @@ import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
 import com.bot4s.telegram.api.{RequestHandler, TelegramBot}
 import com.bot4s.telegram.clients.{AkkaHttpClient, SttpClient}
+import examples.src.BaleAkkaHttpClient
 import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
 
 /** Quick helper to spawn example bots.
@@ -19,5 +20,5 @@ abstract class ExampleBot(token: String)(implicit system: ActorSystem) extends T
   LoggerConfig.level = LogLevel.TRACE
 
   implicit val mat = ActorMaterializer()
-  override val client: RequestHandler = new AkkaHttpClient(token,"tapi.bale.ai")
+  override val client: RequestHandler = new BaleAkkaHttpClient(token,"tapi.bale.ai")
 }
