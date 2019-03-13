@@ -8,7 +8,7 @@ import com.bot4s.telegram.methods._
 import com.bot4s.telegram.models._
 import com.mesr.bot.Strings._
 import com.mesr.bot.helpers._
-import com.mesr.bot.sdk.{BaleAkkaHttpClient, FixedPolling, MessageHandler}
+import com.mesr.bot.sdk.{BaleAkkaHttpClient, BalePolling, MessageHandler}
 import io.circe.{Decoder, Encoder}
 import io.circe.parser._
 import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
@@ -19,8 +19,7 @@ import scala.util.Try
 
 class AftabeBot(token: String)(implicit _system: ActorSystem)
   extends TelegramBot
-    with Polling
-    with FixedPolling
+    with BalePolling
     with Commands
     with InviteHelper
     with PaymentHelper
