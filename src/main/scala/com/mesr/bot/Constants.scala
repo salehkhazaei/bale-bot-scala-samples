@@ -1,4 +1,4 @@
-package examples.src
+package com.mesr.bot
 
 trait Constants {
   val conf = BotConfig.load()

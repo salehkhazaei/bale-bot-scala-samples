@@ -1,10 +1,10 @@
-package examples.src
+package com.mesr.bot
 
 import com.bot4s.telegram.api.TelegramBot
 import com.bot4s.telegram.methods.SendMessage
 import com.bot4s.telegram.models.Message
-import examples.src.Errors.GameFinished
-import examples.src.Strings.gameFinishedStr
+import com.mesr.bot.Errors.GameFinished
+import com.mesr.bot.Strings.gameFinishedStr
 
 trait LevelHelper extends StateHelper with TelegramBot with Constants {
 

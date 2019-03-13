@@ -1,4 +1,4 @@
-package examples.src
+package com.mesr.bot
 
 object Strings {
   val helloMessageStr: String =

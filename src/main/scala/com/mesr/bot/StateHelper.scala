@@ -1,9 +1,6 @@
-package examples.src
+package com.mesr.bot
 
-import com.bot4s.telegram.methods.{SendMessage, SendPhoto}
-import com.bot4s.telegram.models.InputFile.FileId
-import com.bot4s.telegram.models.{KeyboardButton, Message, ReplyKeyboardMarkup}
-import examples.src.Strings._
+import com.bot4s.telegram.models.Message
 
 import scala.util.Try
 

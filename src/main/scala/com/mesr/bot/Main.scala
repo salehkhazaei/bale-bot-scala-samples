@@ -1,5 +1,6 @@
+package com.mesr.bot
+
 import akka.actor.ActorSystem
-import examples.src.BotConfig
 
 object Main extends App {
   val config = BotConfig.load()
