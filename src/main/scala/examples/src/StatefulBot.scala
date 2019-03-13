@@ -1,3 +1,5 @@
+package examples.src
+
 import com.bot4s.telegram.models.Message
 
 /**
