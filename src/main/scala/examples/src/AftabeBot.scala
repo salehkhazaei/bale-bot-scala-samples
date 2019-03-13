@@ -55,6 +55,7 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
   val showSomeCharsStr = "نمایش چند حرف"
   val showWordStr = "نمایش کل کلمه"
   val showHelpStr = "راهنما"
+  val returnButtonStr = "بازگشت"
   val coinAmounts = Map(50 -> 1, 100 -> 2, 150 -> 3)
 
   val coinBuyStr = "لطفا تعداد سکه‌هایی که می‌خواهید را مشخص کنید."
@@ -286,7 +287,8 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
       Seq(
         coinAmounts.map { element =>
           KeyboardButton(coinBuyButtonStr(element._1))
-        }.toSeq
+        }.toSeq,
+        Seq(KeyboardButton(returnButtonStr))
       )
     ))))
   }
@@ -311,7 +313,11 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
         .copy(userState = currentState.userState.copy(coinCount = newCoinCount))
 
       setChatState(newState)
-      request(SendMessage(msg.source, successfulPaymentStr(paidCoinCount, newCoinCount)))
+      request(SendMessage(msg.source, successfulPaymentStr(paidCoinCount, newCoinCount), replyMarkup = Some(ReplyKeyboardMarkup(
+        Seq(
+          Seq(KeyboardButton(returnButtonStr))
+        )
+      ))))
     }
   }
 
@@ -361,6 +367,9 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
 
         case Some(templateResponse) if templateResponse == buyStr =>
           chooseNoOfCoinToBuy()
+
+        case Some(templateResponse) if templateResponse == returnButtonStr =>
+          sendCurrentGame()
 
         case Some(templateResponse) if templateResponse.startsWith(coinBuyButtonStartStr) && templateResponse.endsWith(coinBuyButtonEndStr) =>
           val coinCount = templateResponse.replace(coinBuyButtonStartStr, "").replace(coinBuyButtonEndStr, "").trim.toInt
