@@ -22,6 +22,8 @@ trait PerChatState[S] {
 
   def withChatState[T](f: Option[S] => T)(implicit msg: Message): T = f(getChatState)
 
+  def getStateOfUser(chatId: Long): Option[S] = chatState.get(chatId)
+
   def getChatState(implicit msg: Message): Option[S] = atomic {
     chatState.get(msg.chat.id)
   }

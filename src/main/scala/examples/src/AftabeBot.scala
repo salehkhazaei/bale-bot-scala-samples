@@ -34,6 +34,7 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
       |*کاربر گرامی* شما از طریق این بازو می توانید با حدس عکس، یک تجربه *سرگرمی هیجان انگیز* در بله داشته باشید. برای شروع این *چالش* روی *شروع* کلیک کنید.
       |[/game](send:/game) - شروع بازی
       |[/buy](send:/buy) - خرید سکه
+      |[/setInvite](send:/setInvite) - وارد کردن کد دعوت
       |[/reset](send:/reset) - ریست همه چیز!
       |[/help](send:/help) - راهنما
     """.stripMargin
@@ -56,9 +57,16 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
   val showWordStr = "نمایش کل کلمه"
   val showHelpStr = "راهنما"
   val returnButtonStr = "بازگشت"
+  val inviteFriendsButtonStr = "دعوت دوستان"
   val coinAmounts = Map(50 -> 1, 100 -> 2, 150 -> 3)
 
-  val coinBuyStr = "لطفا تعداد سکه‌هایی که می‌خواهید را مشخص کنید."
+  val coinBuyStr =
+    """
+      |لطفا تعداد سکه‌هایی که می‌خواهید را مشخص کنید.
+      |نکته: با معرفی بازو به دوستان خود می توانید به ازای هر دوست 20 سکه بگیرید
+    """.stripMargin
+
+  val enterInviteCodeStr = "لطفا کد دعوت دوست خود را وارد کنید."
   val coinBuyButtonStartStr = "خرید "
   val coinBuyButtonEndStr = " سکه"
   def coinBuyButtonStr(coinCount: Int): String = coinBuyButtonStartStr + coinCount + coinBuyButtonEndStr
@@ -71,9 +79,16 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
 
   def coinStr(coinCount: Int) = "تعداد سکه‌های شما: " + coinCount
 
+  def inviteStr(userId: Long): String =
+    s"""
+      |کد دعوت شما: $userId
+      |با وارد کردن این کد توسط دوست شما، 20 سکه به حساب شما و 10 سکه به حساب دوست شما اضافه می شود.
+      |
+    """.stripMargin
+
   def defaultGame(level: Int = 0) = GameState(level, 0, Seq.empty)
 
-  def defaultState(userId: Long) = AftabeState(UserState(userId, startCoin), defaultGame())
+  def defaultState(userId: Long) = AftabeState(UserState(userId, startCoin, isEnteringInviteCode = false, None), defaultGame())
 
   def createResponse(gameState: GameState): String = {
     db.levels(gameState.level).response.zipWithIndex.map { char =>
@@ -96,6 +111,10 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
 
       f(currentState, currentLevel)
     }
+  }
+
+  def sendInviteCode()(implicit msg: Message): Unit = {
+    request(SendMessage(msg.source, inviteStr(msg.source)))
   }
 
   def sendCurrentGame(wrongGuess: Boolean = false)(implicit msg: Message): Unit = {
@@ -189,6 +208,22 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
 
   onCommand("/buy") { implicit msg =>
     chooseNoOfCoinToBuy()
+  }
+
+  onCommand("/setInvite") { implicit msg =>
+    enterInviteCode()
+  }
+
+  def enterInviteCode()(implicit msg: Message): Unit = {
+    withCurrentState { (currentState, currentLevel) =>
+      after(1.second, system.scheduler) {
+        val newState = currentState.copy(userState = currentState.userState.copy(isEnteringInviteCode = true))
+
+        Future.successful(setChatState(newState))
+      }
+
+      request(SendMessage(msg.source, enterInviteCodeStr))
+    }
   }
 
   def checkCoins(limit: Int)(implicit msg: Message): Boolean = {
@@ -288,7 +323,10 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
         coinAmounts.map { element =>
           KeyboardButton(coinBuyButtonStr(element._1))
         }.toSeq,
-        Seq(KeyboardButton(returnButtonStr))
+        Seq(
+          KeyboardButton(inviteFriendsButtonStr),
+          KeyboardButton(returnButtonStr)
+        )
       )
     ))))
   }
@@ -321,6 +359,38 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
     }
   }
 
+  def exitEnteringInviteCode()(implicit msg: Message): Unit = {
+    withCurrentState { (currentState, currentLevel) =>
+      val newState = currentState.copy(userState = currentState.userState.copy(isEnteringInviteCode = false))
+
+      setChatState(newState)
+    }
+  }
+
+  def setInviter(inviter: Long)(implicit msg: Message): Unit = {
+    withCurrentState { (currentState, currentLevel) =>
+      val newState = currentState.copy(userState = currentState.userState.copy(invitedBy = Some(inviter)))
+
+      setChatState(newState)
+    }
+  }
+
+  def isEnteringInviteCode()(implicit msg: Message): Boolean = {
+    withCurrentState { (currentState, currentLevel) =>
+      currentState.userState.isEnteringInviteCode
+    }
+  }
+
+  def isInviteCodeExists(inviteCode: Long): Boolean = {
+    getStateOfUser(inviteCode).isDefined
+  }
+
+  def canSetInviter()(implicit msg: Message): Boolean = {
+    withCurrentState { (currentState, currentLevel) =>
+      currentState.userState.invitedBy.isEmpty
+    }
+  }
+
   onMessage { implicit msg =>
     withCheckFinished {
       msg.successfulPayment match {
@@ -334,7 +404,37 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
         case _ =>
       }
 
+      val inviteCodeNotNumberErrorStr = "کد دعوت باید عدد باشد. لطفا مجددا تلاش کنید."
+      val alreadyInvitedErrorStr = "شما قبلا دعوت شده‌اید."
+      val inviteCodeNotFoundErrorStr = "کد دعوت اشتباه است. لطفا مجددا تلاش کنید."
+      val inviterSuccessStr = "شما ۲۰ امتیاز بابت دعوت دوست‌تان گرفتید."
+      val inviteeSuccessStr = "شما ۲۰ امتیاز بابت استفاده از کد دعوت دوست‌تان گرفتید."
+
       msg.text match {
+        case Some(inviteCodeStr) if isEnteringInviteCode =>
+          Try(inviteCodeStr.toLong).toOption match {
+            case Some(inviteCode) if isInviteCodeExists(inviteCode) && canSetInviter =>
+              exitEnteringInviteCode
+              setInviter(inviteCode)
+              request(SendMessage(msg.source, inviteeSuccessStr))
+              request(SendMessage(inviteCode, inviterSuccessStr))
+
+            case Some(inviteCode) if !isInviteCodeExists(inviteCode) =>
+
+              request(SendMessage(msg.source, inviteCodeNotFoundErrorStr))
+            case Some(inviteCode) if !canSetInviter =>
+              request(SendMessage(msg.source, alreadyInvitedErrorStr, replyMarkup = Some(ReplyKeyboardMarkup(
+                Seq(
+                  Seq(KeyboardButton(returnButtonStr))
+                )
+              ))))
+
+              exitEnteringInviteCode
+            case None =>
+
+              request(SendMessage(msg.source, inviteCodeNotNumberErrorStr))
+          }
+
         case Some(command) if command.startsWith("/") => //ignore commands
 
         case Some(templateResponse) if templateResponse == showSomeCharsStr =>
@@ -370,6 +470,9 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
 
         case Some(templateResponse) if templateResponse == returnButtonStr =>
           sendCurrentGame()
+
+        case Some(templateResponse) if templateResponse == inviteFriendsButtonStr =>
+          sendInviteCode()
 
         case Some(templateResponse) if templateResponse.startsWith(coinBuyButtonStartStr) && templateResponse.endsWith(coinBuyButtonEndStr) =>
           val coinCount = templateResponse.replace(coinBuyButtonStartStr, "").replace(coinBuyButtonEndStr, "").trim.toInt
