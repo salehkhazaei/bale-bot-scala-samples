@@ -19,6 +19,7 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
 
   override val system: ActorSystem = _system
   val config = BotConfig.load()
+  val gameCardNo = config.getString("bot.card-no")
 
   val db = Database(
     IndexedSeq(
@@ -32,6 +33,7 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
     """
       |*کاربر گرامی* شما از طریق این بازو می توانید با حدس عکس، یک تجربه *سرگرمی هیجان انگیز* در بله داشته باشید. برای شروع این *چالش* روی *شروع* کلیک کنید.
       |[/game](send:/game) - شروع بازی
+      |[/buy](send:/buy) - خرید سکه
       |[/reset](send:/reset) - ریست همه چیز!
       |[/help](send:/help) - راهنما
     """.stripMargin
@@ -53,6 +55,13 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
   val showSomeCharsStr = "نمایش چند حرف"
   val showWordStr = "نمایش کل کلمه"
   val showHelpStr = "راهنما"
+  val coinAmounts = Map(50 -> 1, 100 -> 2, 150 -> 3)
+
+  val coinBuyStr = "لطفا تعداد سکه‌هایی که می‌خواهید را مشخص کنید."
+  val coinBuyButtonStartStr = "خرید "
+  val coinBuyButtonEndStr = " سکه"
+  def coinBuyButtonStr(coinCount: Int): String = coinBuyButtonStartStr + coinCount + coinBuyButtonEndStr
+  def coinBuyLabelStr(coinCount: Int): String = "خرید " + coinCount + " سکه بازی آفتابه"
 
   def coinStr(coinCount: Int) = "تعداد سکه‌های شما: " + coinCount
 
@@ -172,6 +181,10 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
     request(SendMessage(msg.source, guidMessageStr))
   }
 
+  onCommand("/buy") { implicit msg =>
+    chooseNoOfCoinToBuy()
+  }
+
   def checkCoins(limit: Int)(implicit msg: Message): Boolean = {
     withCurrentState { (currentState, currentLevel) =>
       currentState.userState.coinCount >= limit
@@ -263,6 +276,28 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
     }
   }
 
+  def chooseNoOfCoinToBuy()(implicit msg: Message): Unit = {
+    request(SendMessage(msg.source, coinBuyStr, replyMarkup = Some(ReplyKeyboardMarkup(
+      Seq(
+        coinAmounts.map { element =>
+          KeyboardButton(coinBuyButtonStr(element._1))
+        }.toSeq
+      )
+    ))))
+  }
+
+  def buyCoins(coinCount: Int)(implicit msg: Message): Unit = {
+    request(SendInvoice(
+      chatId = msg.source,
+      title = coinBuyButtonStr(coinCount),
+      description = "",
+      payload = "payload",
+      providerToken = gameCardNo, startParameter = gameCardNo,
+      currency = Currency.YER,
+      prices = Array(LabeledPrice(label = coinBuyLabelStr(coinCount), coinAmounts(coinCount)))
+    ))
+  }
+
   onMessage { implicit msg =>
     withCheckFinished {
       msg.text match {
@@ -297,7 +332,11 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
           request(SendMessage(msg.source, guidMessageStr))
 
         case Some(templateResponse) if templateResponse == buyStr =>
-          request(SendMessage(msg.source, "خرید"))
+          chooseNoOfCoinToBuy()
+
+        case Some(templateResponse) if templateResponse.startsWith(coinBuyButtonStartStr) && templateResponse.endsWith(coinBuyButtonEndStr) =>
+          val coinCount = templateResponse.replace(coinBuyButtonStartStr, "").replace(coinBuyButtonEndStr, "").trim.toInt
+          buyCoins(coinCount)
 
         case Some(guess) =>
           withCurrentState { (_, currentLevel) =>
