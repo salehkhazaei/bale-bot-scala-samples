@@ -12,6 +12,8 @@ import akka.pattern.after
 import scala.concurrent.Future
 import scala.util.{Random, Try}
 
+case object GameFinished extends RuntimeException("Game has finished")
+
 class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_system)
   with Polling with FixedPolling with Commands with PerChatState[AftabeState] {
 
@@ -41,6 +43,7 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
   val startCoin = 400
   val wonStr = "*حدس شما درست بود. شما برنده " + wonCoin + " سکه شدید.*"
   val insufficientAmountStr = "سکه‌های شما کافی نیست."
+  val gameFinishedStr = "شما به پایان بازی رسیدید. منتظر مراحل جدید باشید."
   val showSomeCharNotAllowed = "شما یک‌بار از این قابلیت استفاده کرده‌اید."
   def showWord(response: String): String = "جواب: *" + response + "*"
 
@@ -68,10 +71,10 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
     }.mkString
   }
 
-  def withCurrentState[S, T](f: (AftabeState, Level) => T)(implicit msg: Message): T = {
+  def withCurrentState[S, T](f: (AftabeState, Option[Level]) => T)(implicit msg: Message): T = {
     withChatState { implicit optState =>
       val currentState = optState.getOrElse(defaultState(msg.source))
-      val currentLevel = db.levels(currentState.gameState.level)
+      val currentLevel = Try(db.levels(currentState.gameState.level)).toOption
       setChatState(currentState)
 
       f(currentState, currentLevel)
@@ -79,34 +82,36 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
   }
 
   def sendCurrentGame(wrongGuess: Boolean = false)(implicit msg: Message): Unit = {
-    withCurrentState { (currentState, currentLevel) =>
-      request(SendPhoto(msg.source, FileId(currentLevel.fileId)))
+    withCheckFinished {
+      withCurrentState { (currentState, currentLevel) =>
+        request(SendPhoto(msg.source, FileId(currentLevel.get.fileId)))
 
-      val isShowCharsAllowed = currentState.gameState.revealedChars.forall(_ == false)
+        val isShowCharsAllowed = currentState.gameState.revealedChars.forall(_ == false)
 
-      after(500.milliseconds, system.scheduler) {
-        val responseText =
-          s"""
-             |${if (wrongGuess) wrongGuessStr else ""}
-             |${createResponse(currentState.gameState)}
-             |$enterYourResponseStr
+        after(500.milliseconds, system.scheduler) {
+          val responseText =
+            s"""
+               |${if (wrongGuess) wrongGuessStr else ""}
+               |${createResponse(currentState.gameState)}
+               |$enterYourResponseStr
           """.stripMargin
 
-        request(SendMessage(msg.source, responseText, replyMarkup = Some(ReplyKeyboardMarkup(
-          Seq(
-            if (isShowCharsAllowed)
-              Seq(
-                KeyboardButton(showSomeCharsStr),
-                KeyboardButton(showWordStr),
-                KeyboardButton(showHelpStr)
-              )
-            else
-              Seq(
-                KeyboardButton(showWordStr),
-                KeyboardButton(showHelpStr)
-              )
-          )
-        ))))
+          request(SendMessage(msg.source, responseText, replyMarkup = Some(ReplyKeyboardMarkup(
+            Seq(
+              if (isShowCharsAllowed)
+                Seq(
+                  KeyboardButton(showSomeCharsStr),
+                  KeyboardButton(showWordStr),
+                  KeyboardButton(showHelpStr)
+                )
+              else
+                Seq(
+                  KeyboardButton(showWordStr),
+                  KeyboardButton(showHelpStr)
+                )
+            )
+          ))))
+        }
       }
     }
   }
@@ -150,7 +155,9 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
   }
 
   onCommand("/game") { implicit msg =>
-    sendCurrentGame()
+    withCheckFinished {
+      sendCurrentGame()
+    }
   }
 
   onCommand("/reset") { implicit msg =>
@@ -206,9 +213,11 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
   def showSomeChars(implicit msg: Message): Unit = {
     withCurrentState { (currentState, currentLevel) =>
       if (currentState.gameState.revealedChars.forall(_ == false)) {
+        val currentResponse = currentLevel.get.response
+
         val newCurrentState = currentState
           .copy(gameState = currentState.gameState.copy(
-            revealedChars = revealChars(currentLevel.response, currentLevel.response.map(_ => false), calcRevealCount(currentLevel.response))
+            revealedChars = revealChars(currentResponse, currentResponse.map(_ => false), calcRevealCount(currentResponse))
           ))
 
         setChatState(newCurrentState)
@@ -222,7 +231,7 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
     withCurrentState { (currentState, currentLevel) =>
       val newCurrentState = currentState
         .copy(gameState = currentState.gameState.copy(
-          revealedChars = currentLevel.response.map(_ => true)
+          revealedChars = currentLevel.get.response.map(_ => true)
         ))
 
       setChatState(newCurrentState)
@@ -239,52 +248,66 @@ class AftabeBot(_system: ActorSystem, token: String) extends ExampleBot(token)(_
     ))))
   }
 
+  def withCheckFinished[T](f: => T)(implicit msg: Message): T = {
+    withCurrentState { (currentState, currentLevel) =>
+      if (currentLevel.isDefined) {
+        f
+      } else {
+        request(SendMessage(msg.source, gameFinishedStr))
+        throw GameFinished
+      }
+    }
+  }
+
   onMessage { implicit msg =>
-    msg.text match {
-      case Some(command) if command.startsWith("/") => //ignore commands
+    withCheckFinished {
+      msg.text match {
+        case Some(command) if command.startsWith("/") => //ignore commands
 
-      case Some(templateResponse) if templateResponse == showSomeCharsStr =>
-        if (checkCoins(showSomeCharsPrice)) {
-          subtractCoins(showSomeCharsPrice)
-          showSomeChars(msg)
-          sendCurrentGame()
-        } else {
-          insufficientAmount
-        }
-      case Some(templateResponse) if templateResponse == showWordStr =>
-        if (checkCoins(showWordPrice)) {
-          subtractCoins(showWordPrice)
-          withCurrentState { (currentState, currentLevel) =>
-            request(SendMessage(msg.source, showWord(currentLevel.response)))
-          }
-
-          nextLevel
-
-          after(1.second, system.scheduler) {
-            Future.successful(sendCurrentGame())
-          }
-        } else {
-          insufficientAmount
-        }
-
-      case Some(templateResponse) if templateResponse == showHelpStr =>
-        request(SendMessage(msg.source, guidMessageStr))
-
-      case Some(templateResponse) if templateResponse == buyStr =>
-        request(SendMessage(msg.source, "خرید"))
-
-      case Some(guess) =>
-        withCurrentState { (_, currentLevel) =>
-          if (currentLevel.response == guess) {
-            successGuess(msg)
-
+        case Some(templateResponse) if templateResponse == showSomeCharsStr =>
+          if (checkCoins(showSomeCharsPrice)) {
+            subtractCoins(showSomeCharsPrice)
+            showSomeChars(msg)
             sendCurrentGame()
           } else {
-            wrongGuess(msg)
-
-            sendCurrentGame(wrongGuess = true)
+            insufficientAmount
           }
-        }
+        case Some(templateResponse) if templateResponse == showWordStr =>
+          if (checkCoins(showWordPrice)) {
+            subtractCoins(showWordPrice)
+
+            withCurrentState { (currentState, currentLevel) =>
+              request(SendMessage(msg.source, showWord(currentLevel.get.response)))
+            }
+
+            nextLevel
+
+            after(1.second, system.scheduler) {
+              Future.successful(sendCurrentGame())
+            }
+          } else {
+            insufficientAmount
+          }
+
+        case Some(templateResponse) if templateResponse == showHelpStr =>
+          request(SendMessage(msg.source, guidMessageStr))
+
+        case Some(templateResponse) if templateResponse == buyStr =>
+          request(SendMessage(msg.source, "خرید"))
+
+        case Some(guess) =>
+          withCurrentState { (_, currentLevel) =>
+            if (currentLevel.get.response == guess) {
+              successGuess(msg)
+
+              sendCurrentGame()
+            } else {
+              wrongGuess(msg)
+
+              sendCurrentGame(wrongGuess = true)
+            }
+          }
+      }
     }
   }
 }
