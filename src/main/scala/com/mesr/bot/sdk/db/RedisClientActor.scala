@@ -1,7 +1,7 @@
-package com.mesr.bot.db
+package com.mesr.bot.sdk.db
 
 import akka.actor.Actor
-import com.mesr.bot.db.entities._
+import com.mesr.bot.sdk.db.entities._
 import com.redis.{ RedisClient, RedisClientPool }
 
 class RedisClientActor extends Actor {

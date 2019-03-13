@@ -1,4 +1,4 @@
-package com.mesr.bot
+package com.mesr.bot.helpers
 
 import akka.actor.ActorSystem
 import akka.pattern.after

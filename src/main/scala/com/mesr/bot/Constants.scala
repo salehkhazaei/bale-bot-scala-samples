@@ -1,15 +1,17 @@
 package com.mesr.bot
 
+import com.mesr.bot.sdk.BotConfig
+import com.typesafe.config.Config
+
 trait Constants {
-  val conf = BotConfig.load()
+  val conf: Config = BotConfig.load()
+  val botConf: Config = conf.getConfig("bot")
 
-  val gameCardNo = conf.getString("bot.card-no")
+  val gameCardNo: String = botConf.getString("card-no")
+  val showSomeCharsPrice: Int = botConf.getInt("show-some-chars-price")
+  val showWordPrice: Int = botConf.getInt("show-word-price")
+  val wonCoin: Int = botConf.getInt("won-coin")
+  val startCoin: Int = botConf.getInt("start-coin")
 
-  val showSomeCharsPrice = 10
-  val showWordPrice = 50
-  val wonCoin = 50
-  val startCoin = 400
   val coinAmounts = Map(50 -> 1, 100 -> 2, 150 -> 3)
-
-
 }

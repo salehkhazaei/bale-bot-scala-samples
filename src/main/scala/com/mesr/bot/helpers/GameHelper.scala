@@ -1,4 +1,4 @@
-package com.mesr.bot
+package com.mesr.bot.helpers
 
 import akka.actor.ActorSystem
 import akka.pattern.after
@@ -6,6 +6,7 @@ import com.bot4s.telegram.methods.{SendMessage, SendPhoto}
 import com.bot4s.telegram.models.InputFile.FileId
 import com.bot4s.telegram.models.{KeyboardButton, Message, ReplyKeyboardMarkup}
 import com.mesr.bot.Strings._
+import com.mesr.bot.GameState
 
 import scala.concurrent.duration._
 

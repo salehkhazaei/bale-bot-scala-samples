@@ -1,4 +1,4 @@
-package com.mesr.bot.db.entities
+package com.mesr.bot.sdk.db.entities
 
 trait RedisCommands {
   val key: String

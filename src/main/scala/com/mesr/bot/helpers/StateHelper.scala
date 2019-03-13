@@ -1,6 +1,8 @@
-package com.mesr.bot
+package com.mesr.bot.helpers
 
 import com.bot4s.telegram.models.Message
+import com.mesr.bot._
+import com.mesr.bot.sdk.PerChatState
 
 import scala.util.Try
 

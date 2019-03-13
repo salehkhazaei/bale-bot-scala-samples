@@ -1,4 +1,4 @@
-package com.mesr.bot
+package com.mesr.bot.sdk
 
 import java.nio.file.{Files, Paths}
 
