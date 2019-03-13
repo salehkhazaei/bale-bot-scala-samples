@@ -1,5 +1,3 @@
-import com.bot4s.telegram.api.Polling
-import com.bot4s.telegram.api.declarative.Commands
 import com.bot4s.telegram.models.Message
 
 /**
@@ -26,20 +24,5 @@ trait PerChatState[S] {
 
   def getChatState(implicit msg: Message): Option[S] = atomic {
     chatState.get(msg.chat.id)
-  }
-}
-
-/**
-  * Per-chat counter.
-  *
-  * @param token Bot's token.
-  */
-class StatefulBot(token: String) extends ExampleBot(token) with Polling with Commands with PerChatState[Int] {
-  onCommand("/inc") { implicit msg =>
-    withChatState { s =>
-      val n = s.getOrElse(0)
-      setChatState(n + 1)
-      reply(s"Counter: $n")
-    }
   }
 }
