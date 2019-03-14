@@ -29,6 +29,17 @@ trait MessageHandler extends TelegramBot with Commands with StrictLogging {
     defaultFilter = Some(f)
   }
 
+  def onPhotoFilter(f: Message => Unit): Unit = {
+    onMessage { msg =>
+      msg.photo match {
+        case Some(photoSeq) if photoSeq.nonEmpty =>
+          f(msg)
+
+        case _ =>
+      }
+    }
+  }
+
   def onReceipt(f: Message => Unit): Unit = {
     onMessage { msg =>
       msg.successfulPayment match {

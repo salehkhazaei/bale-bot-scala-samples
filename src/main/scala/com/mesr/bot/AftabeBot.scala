@@ -5,7 +5,6 @@ import akka.stream.ActorMaterializer
 import com.bot4s.telegram.api.declarative.Commands
 import com.bot4s.telegram.api.{RequestHandler, TelegramBot}
 import com.bot4s.telegram.methods._
-import com.bot4s.telegram.models._
 import com.mesr.bot.Strings._
 import com.mesr.bot.helpers._
 import com.mesr.bot.sdk.{BaleAkkaHttpClient, BalePolling, MessageHandler}
@@ -15,7 +14,6 @@ import io.circe.{Decoder, Encoder}
 import slogging.{LogLevel, LoggerConfig, PrintLoggerFactory}
 
 import scala.concurrent.ExecutionContext
-import scala.util.Try
 
 class AftabeBot(token: String)(implicit _system: ActorSystem)
   extends TelegramBot
@@ -36,6 +34,9 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
 
   implicit val gameStateEncoder: Encoder[GameState] = deriveEncoder[GameState]
   implicit val gameStateDecoder: Decoder[GameState] = deriveDecoder[GameState]
+
+  implicit val requestLevelEncoder: Encoder[RequestLevel] = deriveEncoder[RequestLevel]
+  implicit val requestLevelDecoder: Decoder[RequestLevel] = deriveDecoder[RequestLevel]
 
   override implicit val encoder: Encoder[AftabeState] = deriveEncoder[AftabeState]
   override implicit val decoder: Decoder[AftabeState] = deriveDecoder[AftabeState]
@@ -153,34 +154,21 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
     }
   }
 
+  onTextFilter(addingNewLevelStr) { implicit msg =>
+    addingNewLevelRequest()
+  }
+
+  onPhotoFilter { implicit msg =>
+    addingNewLevelPhoto()
+  }
+
   onTextDefaultFilter { implicit msg =>
     withCheckFinished {
-      if (isEnteringInviteCode) {
-        Try(msg.text.get.toLong).toOption match {
-          case Some(inviteCode) if isInviteCodeExists(inviteCode) && canSetInviter =>
-            exitEnteringInviteCode
-            setInviter(inviteCode)
+      if (isEnteringLevelResponse) {
+        setLevelText()
 
-            for {
-              _ <- request(SendMessage(msg.source, inviteeSuccessStr))
-              _ <- request(SendMessage(inviteCode, inviterSuccessStr))
-            } yield ()
-
-          case Some(inviteCode) if !isInviteCodeExists(inviteCode) =>
-
-            request(SendMessage(msg.source, inviteCodeNotFoundErrorStr))
-          case Some(_) if !canSetInviter =>
-            request(SendMessage(msg.source, alreadyInvitedErrorStr, replyMarkup = Some(ReplyKeyboardMarkup(
-              Seq(
-                Seq(KeyboardButton(returnButtonStr))
-              )
-            ))))
-
-            exitEnteringInviteCode
-          case None =>
-
-            request(SendMessage(msg.source, inviteCodeNotNumberErrorStr))
-        }
+      } else if (isEnteringInviteCode) {
+        handleInviteCode()
 
       } else {
         withCurrentState { (_, currentLevel) =>

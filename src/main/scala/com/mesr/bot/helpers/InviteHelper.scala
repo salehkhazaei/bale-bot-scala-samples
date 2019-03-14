@@ -4,11 +4,12 @@ import akka.actor.ActorSystem
 import akka.pattern.after
 import com.bot4s.telegram.api.TelegramBot
 import com.bot4s.telegram.methods.SendMessage
-import com.bot4s.telegram.models.Message
-import com.mesr.bot.Strings.{enterInviteCodeStr, inviteStr}
+import com.bot4s.telegram.models.{KeyboardButton, Message, ReplyKeyboardMarkup}
+import com.mesr.bot.Strings._
 
 import scala.concurrent.Future
 import scala.concurrent.duration._
+import scala.util.Try
 
 trait InviteHelper extends StateHelper with TelegramBot {
   def sendInviteCode()(implicit msg: Message): Unit = {
@@ -75,6 +76,34 @@ trait InviteHelper extends StateHelper with TelegramBot {
   def canSetInviter()(implicit msg: Message): Boolean = {
     withCurrentState { (currentState, _) =>
       currentState.userState.invitedBy.isEmpty
+    }
+  }
+
+  def handleInviteCode()(implicit msg: Message): Unit = {
+    Try(msg.text.get.toLong).toOption match {
+      case Some(inviteCode) if isInviteCodeExists(inviteCode) && canSetInviter =>
+        exitEnteringInviteCode
+        setInviter(inviteCode)
+
+        for {
+          _ <- request(SendMessage(msg.source, inviteeSuccessStr))
+          _ <- request(SendMessage(inviteCode, inviterSuccessStr))
+        } yield ()
+
+      case Some(inviteCode) if !isInviteCodeExists(inviteCode) =>
+
+        request(SendMessage(msg.source, inviteCodeNotFoundErrorStr))
+      case Some(_) if !canSetInviter =>
+        request(SendMessage(msg.source, alreadyInvitedErrorStr, replyMarkup = Some(ReplyKeyboardMarkup(
+          Seq(
+            Seq(KeyboardButton(returnButtonStr))
+          )
+        ))))
+
+        exitEnteringInviteCode
+      case None =>
+
+        request(SendMessage(msg.source, inviteCodeNotNumberErrorStr))
     }
   }
 

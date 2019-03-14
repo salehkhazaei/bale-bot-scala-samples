@@ -10,7 +10,7 @@ trait StateHelper extends StatefulBot[AftabeState] with Constants {
 
   def defaultGame(level: Int = 0) = GameState(level, 0, Seq.empty)
 
-  def defaultState(userId: Long) = AftabeState(UserState(userId, startCoin, isEnteringInviteCode = false, None), defaultGame())
+  def defaultState(userId: Long) = AftabeState(UserState(userId, startCoin, isEnteringInviteCode = false, None), defaultGame(), None)
 
   val db = Database(
     IndexedSeq(
