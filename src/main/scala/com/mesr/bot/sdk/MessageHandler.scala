@@ -42,7 +42,7 @@ trait MessageHandler extends TelegramBot with Commands with StrictLogging {
   onMessage { msg =>
     if (msg.text.getOrElse("").startsWith("/")) {
       // ignore commands
-    } else {
+    } else if (msg.text.isDefined) {
       val filteringResult = filters.map { filter =>
         msg.text match {
           case Some(text) if filter.filterFunction(text) =>
