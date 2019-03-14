@@ -112,7 +112,13 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
   }
 
   onTextFilter(returnButtonStr) { implicit msg =>
-    withCheckFinished {
+    withCurrentState { (currentState, currentLevel) =>
+      val newState = currentState
+        .copy(requestLevelState = None)
+        .copy(userState = currentState.userState.copy(isEnteringInviteCode = false))
+
+      setChatState(newState)
+
       sendCurrentGame()
     }
   }
