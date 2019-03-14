@@ -1,7 +1,8 @@
 package com.mesr.bot.helpers
 
 import com.bot4s.telegram.api.TelegramBot
-import com.bot4s.telegram.methods.{SendInvoice, SendMessage}
+import com.bot4s.telegram.methods.{SendInvoice, SendMessage, SendPhoto}
+import com.bot4s.telegram.models.InputFile.FileId
 import com.bot4s.telegram.models._
 import com.mesr.bot.Strings._
 import com.mesr.bot.Constants
@@ -26,11 +27,12 @@ trait PaymentHelper extends StateHelper with TelegramBot with Constants {
     request(SendInvoice(
       chatId = msg.source,
       title = coinBuyButtonStr(coinCount),
-      description = "",
+      description = getCoinDescription(coinCount),
       payload = "buy_" + coinCount,
       providerToken = gameCardNo, startParameter = gameCardNo,
       currency = Currency.YER,
-      prices = Array(LabeledPrice(label = coinBuyLabelStr(coinCount), coinAmounts(coinCount)))
+      prices = Array(LabeledPrice(label = coinBuyLabelStr(coinCount), coinAmounts(coinCount))),
+      photoUrl = Some(getCoinPhotoUrl(coinCount))
     ))
   }
 
@@ -42,11 +44,14 @@ trait PaymentHelper extends StateHelper with TelegramBot with Constants {
         .copy(userState = currentState.userState.copy(coinCount = newCoinCount))
 
       setChatState(newState)
-      request(SendMessage(msg.source, successfulPaymentStr(paidCoinCount, newCoinCount), replyMarkup = Some(ReplyKeyboardMarkup(
-        Seq(
-          Seq(KeyboardButton(returnButtonStr))
-        )
-      ))))
+      for {
+        _ <- request(SendPhoto(msg.source, FileId(getCoinPhoto(paidCoinCount))))
+        _ <- request(SendMessage(msg.source, successfulPaymentStr(paidCoinCount, newCoinCount), replyMarkup = Some(ReplyKeyboardMarkup(
+          Seq(
+            Seq(KeyboardButton(returnButtonStr))
+          )
+        ))))
+      } yield ()
     }
   }
 }

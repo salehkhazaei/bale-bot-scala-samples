@@ -24,13 +24,17 @@ object Strings {
   val showInviteCodeStr = "وارد کردن کد دعوت"
   val returnButtonStr = "بازگشت"
   val startButtonStr = "شروع بازی"
-  val addingNewLevelStr = "درخواست مرحله جدید"
+  val addingNewLevelStr = "پیشنهاد مرحله جدید"
   val inviteFriendsButtonStr = "دعوت دوستان"
   val enterInviteCodeStr = "لطفا کد دعوت دوست خود را وارد کنید."
   val aftabeGhermezBuyStr = "خرید " + getCoinString(1)
   val aftabeHalabiBuyStr = "خرید " + getCoinString(2)
   val aftabeLaganBuyStr = "خرید " + getCoinString(4)
   val aftabeLagan7DastBuyStr = "خرید " + getCoinString(8)
+  val aftabeGhermezDescStr = "آفتابه قرمز: ۵۰ ریال"
+  val aftabeHalabiDescStr = "آفتابه حلبی معادل ۲ آفتابه قرمز: ۹۰ ریال"
+  val aftabeLaganDescStr = "یک دست آفتابه لگن معادل ۴ آفتابه قرمز: ۱۵۰ ریال"
+  val aftabeLagan7DastDescStr = "یک بسته ۷ دست آفتابه لگن معادل ۸ آفتابه قرمز: ۲۰۰ ریال"
   val inviteCodeNotNumberErrorStr = "کد دعوت باید عدد باشد. لطفا مجددا تلاش کنید."
   val alreadyInvitedErrorStr = "شما قبلا دعوت شده‌اید."
   val inviteCodeNotFoundErrorStr = "کد دعوت اشتباه است. لطفا مجددا تلاش کنید."
@@ -42,8 +46,8 @@ object Strings {
 
   def successfulPaymentStr(paidCoinCount: Int, newCoinCount: Int): String =
     s"""
-       |شما $paidCoinCount آفتابه خریده‌اید.
-       |تعداد کد آفتابه‌ها: $newCoinCount
+       |شما * ${getCoinString(paidCoinCount)} * خریدید.
+       |مجموع آفتابه‌های شما: *${getCoinString(newCoinCount)} *
     """.stripMargin.trim
 
   def inviteStr(userId: Long): String =
@@ -81,8 +85,13 @@ object Strings {
     }
   }
 
-
   def coinBuyButtonStr(coinCount: Int): String = "خرید " + getCoinString(coinCount)
   def coinBuyLabelStr(coinCount: Int): String = "خرید " + getCoinString(coinCount)
   def coinStr(coinCount: Int): String = "تعداد آفتابه‌های شما: " + getCoinString(coinCount)
+  def getCoinDescription(coinCount: Int): String = coinCount match {
+    case 1 => aftabeGhermezDescStr
+    case 2 => aftabeHalabiDescStr
+    case 4 => aftabeLaganDescStr
+    case 8 => aftabeLagan7DastDescStr
+  }
 }
