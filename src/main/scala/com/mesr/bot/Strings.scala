@@ -24,6 +24,7 @@ object Strings {
   val showInviteCodeStr = "وارد کردن کد دعوت"
   val returnButtonStr = "بازگشت"
   val startButtonStr = "شروع بازی"
+  val addingNewLevelStr = "درخواست مرحله جدید"
   val inviteFriendsButtonStr = "دعوت دوستان"
   val enterInviteCodeStr = "لطفا کد دعوت دوست خود را وارد کنید."
   val aftabeGhermezBuyStr = "خرید " + getCoinString(1)
@@ -35,6 +36,9 @@ object Strings {
   val inviteCodeNotFoundErrorStr = "کد دعوت اشتباه است. لطفا مجددا تلاش کنید."
   val inviterSuccessStr = "شما *یک دست آفتابه لگن* بابت دعوت دوست‌تان گرفتید."
   val inviteeSuccessStr = "شما *یک دست آفتابه لگن* بابت استفاده از کد دعوت دوست‌تان گرفتید."
+  val sendLevelPhotoStr = "لطفا عکس مرحله را ارسال کنید"
+  val sendLevelResponseStr = "لطفا پاسخ مرحله را ارسال کنید"
+  val levelRegisteredStr = "مرحله ثبت شد. پس از تایید ادمین به بات اضافه می‌شود."
 
   def successfulPaymentStr(paidCoinCount: Int, newCoinCount: Int): String =
     s"""

@@ -17,6 +17,7 @@ trait GameHelper extends StateHelper with LevelHelper {
           KeyboardButton(showInviteCodeStr),
           KeyboardButton(startButtonStr),
           KeyboardButton(buyStr),
+          KeyboardButton(addingNewLevelStr),
           KeyboardButton(showHelpStr)
         )
       )))))
