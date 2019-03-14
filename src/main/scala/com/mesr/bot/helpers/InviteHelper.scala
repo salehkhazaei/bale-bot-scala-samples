@@ -37,9 +37,28 @@ trait InviteHelper extends StateHelper with TelegramBot {
 
   def setInviter(inviter: Long)(implicit msg: Message): Unit = {
     withCurrentState { (currentState, _) =>
-      val newState = currentState.copy(userState = currentState.userState.copy(invitedBy = Some(inviter)))
+      val newCoinCount = currentState.userState.coinCount + inviteeGiftCoin
+      val newState = currentState.copy(userState = currentState.userState
+        .copy(invitedBy = Some(inviter))
+        .copy(coinCount = newCoinCount)
+      )
 
       setChatState(newState)
+
+      increaseInviterCoin(inviter)
+    }
+  }
+
+  def increaseInviterCoin(inviter: Long): Unit = {
+    for {
+      currentState <- getStateOfUser(inviter)
+    } yield {
+      val newCoinCount = currentState.userState.coinCount + inviterGiftCoin
+      val newState = currentState.copy(userState = currentState.userState
+        .copy(coinCount = newCoinCount)
+      )
+
+      setStateOfUser(inviter, newState)
     }
   }
 

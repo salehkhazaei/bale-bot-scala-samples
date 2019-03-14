@@ -50,7 +50,7 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
   override val client: RequestHandler = new BaleAkkaHttpClient(token,"tapi.bale.ai")
 
   onCommand("/start") { implicit msg =>
-    request(SendMessage(msg.source, helloMessageStr))
+    startGame
   }
 
   onCommand("/game") { implicit msg =>
@@ -99,6 +99,18 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
     }
   }
 
+  onTextFilter(startButtonStr) { implicit msg =>
+    withCheckFinished {
+      sendCurrentGame()
+    }
+  }
+
+  onTextFilter(showInviteCodeStr) { implicit msg =>
+    withCheckFinished {
+      enterInviteCode()(system, msg)
+    }
+  }
+
   onTextFilter(returnButtonStr) { implicit msg =>
     withCheckFinished {
       sendCurrentGame()
@@ -117,10 +129,27 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
     }
   }
 
-  onTextFilter(text => text.startsWith(coinBuyButtonStartStr) && text.endsWith(coinBuyButtonEndStr)) { implicit msg =>
+  onTextFilter(aftabeGhermezBuyStr) { implicit msg =>
     withCheckFinished {
-      val coinCount = msg.text.get.replace(coinBuyButtonStartStr, "").replace(coinBuyButtonEndStr, "").trim.toInt
-      buyCoins(coinCount)
+      buyCoins(1)
+    }
+  }
+
+  onTextFilter(aftabeHalabiBuyStr) { implicit msg =>
+    withCheckFinished {
+      buyCoins(2)
+    }
+  }
+
+  onTextFilter(aftabeLaganBuyStr) { implicit msg =>
+    withCheckFinished {
+      buyCoins(4)
+    }
+  }
+
+  onTextFilter(aftabeLagan7DastBuyStr) { implicit msg =>
+    withCheckFinished {
+      buyCoins(8)
     }
   }
 
@@ -131,8 +160,11 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
           case Some(inviteCode) if isInviteCodeExists(inviteCode) && canSetInviter =>
             exitEnteringInviteCode
             setInviter(inviteCode)
-            request(SendMessage(msg.source, inviteeSuccessStr))
-            request(SendMessage(inviteCode, inviterSuccessStr))
+
+            for {
+              _ <- request(SendMessage(msg.source, inviteeSuccessStr))
+              _ <- request(SendMessage(inviteCode, inviterSuccessStr))
+            } yield ()
 
           case Some(inviteCode) if !isInviteCodeExists(inviteCode) =>
 
@@ -153,12 +185,14 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
       } else {
         withCurrentState { (_, currentLevel) =>
           if (currentLevel.get.response == msg.text.get) {
-            successGuess(msg)
 
-            sendCurrentGame()
+            for {
+              _ <- successGuess(msg)
+              _ <- sendCurrentGame()
+            } yield ()
           } else {
-            wrongGuess(msg)
 
+            wrongGuess(msg)
             sendCurrentGame(wrongGuess = true)
           }
         }

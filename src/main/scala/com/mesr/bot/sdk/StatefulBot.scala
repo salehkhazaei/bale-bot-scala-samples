@@ -73,6 +73,12 @@ trait StatefulBot[S] {
 
   def getStateOfUser(chatId: Long): Option[S] = chatState.get(chatId)
 
+  def setStateOfUser(chatId: Long, value: S): Unit = atomic {
+    chatState.update(chatId, value)
+
+    save
+  }
+
   def getChatState(implicit msg: Message): Option[S] = atomic {
     chatState.get(msg.chat.id)
   }

@@ -14,6 +14,7 @@ import scala.util.Random
 
 trait HintHelper extends StateHelper with TelegramBot with Constants with LevelHelper with GameHelper {
 
+
   def checkCoins(limit: Int)(implicit msg: Message): Boolean = {
     withCurrentState { (currentState, _) =>
       currentState.userState.coinCount >= limit
