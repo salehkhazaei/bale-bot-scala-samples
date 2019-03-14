@@ -5,6 +5,7 @@ import akka.stream.ActorMaterializer
 import com.bot4s.telegram.api.declarative.Commands
 import com.bot4s.telegram.api.{RequestHandler, TelegramBot}
 import com.bot4s.telegram.methods._
+import com.bot4s.telegram.models.{KeyboardButton, ReplyKeyboardMarkup}
 import com.mesr.bot.Strings._
 import com.mesr.bot.helpers._
 import com.mesr.bot.sdk.{BaleAkkaHttpClient, BalePolling, MessageHandler}
@@ -65,7 +66,7 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
   }
 
   onCommand("/help") { implicit msg =>
-    request(SendMessage(msg.source, guidMessageStr))
+    help
   }
 
   onCommand("/buy") { implicit msg =>
@@ -89,9 +90,7 @@ class AftabeBot(token: String)(implicit _system: ActorSystem)
   }
 
   onTextFilter(showHelpStr) { implicit msg =>
-    withCheckFinished {
-      request(SendMessage(msg.source, guidMessageStr))
-    }
+    help
   }
 
   onTextFilter(buyStr) { implicit msg =>

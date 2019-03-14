@@ -95,4 +95,13 @@ trait GameHelper extends StateHelper with LevelHelper {
     }
   }
 
+  def help()(implicit msg: Message): Unit = {
+    request(SendMessage(msg.source, guidMessageStr, replyMarkup = Some(ReplyKeyboardMarkup(
+      Seq(
+        Seq(
+          KeyboardButton(returnButtonStr)
+        )
+      )
+    ))))
+  }
 }
