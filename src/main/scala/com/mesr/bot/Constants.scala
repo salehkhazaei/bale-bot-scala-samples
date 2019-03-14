@@ -12,6 +12,8 @@ trait Constants {
   val showWordPrice: Int = botConf.getInt("show-word-price")
   val wonCoin: Int = botConf.getInt("won-coin")
   val startCoin: Int = botConf.getInt("start-coin")
+  val inviterGiftCoin: Int = botConf.getInt("inviter-gift-coin")
+  val inviteeGiftCoin: Int = botConf.getInt("invitee-gift-coin")
 
-  val coinAmounts = Map(50 -> 1, 100 -> 2, 150 -> 3)
+  val coinAmounts = Map(1 -> 100, 2-> 200, 4 -> 300, 8 -> 400)
 }

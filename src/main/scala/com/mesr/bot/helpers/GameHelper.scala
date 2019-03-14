@@ -1,18 +1,28 @@
 package com.mesr.bot.helpers
 
 import akka.actor.ActorSystem
-import akka.pattern.after
 import com.bot4s.telegram.methods.{SendMessage, SendPhoto}
 import com.bot4s.telegram.models.InputFile.FileId
 import com.bot4s.telegram.models.{KeyboardButton, Message, ReplyKeyboardMarkup}
-import com.mesr.bot.Strings._
 import com.mesr.bot.GameState
+import com.mesr.bot.Strings._
 
-import scala.concurrent.duration._
+import scala.concurrent.Future
 
 trait GameHelper extends StateHelper with LevelHelper {
+  def startGame()(implicit system: ActorSystem, msg: Message): Unit = {
+    request(SendMessage(msg.source, helloMessageStr, replyMarkup = Some(ReplyKeyboardMarkup(
+      Seq(
+        Seq(
+          KeyboardButton(showInviteCodeStr),
+          KeyboardButton(startButtonStr),
+          KeyboardButton(buyStr),
+          KeyboardButton(showHelpStr)
+        )
+      )))))
+  }
 
-  def sendCurrentGame(wrongGuess: Boolean = false)(implicit system: ActorSystem, msg: Message): Unit = {
+  def sendCurrentGame(wrongGuess: Boolean = false)(implicit system: ActorSystem, msg: Message): Future[Unit] = {
     def createResponse(gameState: GameState): String = {
       db.levels(gameState.level).response.zipWithIndex.map { char =>
         if (char._1 == ' ')
@@ -28,21 +38,18 @@ trait GameHelper extends StateHelper with LevelHelper {
 
     withCheckFinished {
       withCurrentState { (currentState, currentLevel) =>
-        request(SendPhoto(msg.source, FileId(currentLevel.get.fileId)))
-
-        val isShowCharsAllowed = currentState.gameState.revealedChars.forall(_ == false)
-
-        after(500.milliseconds, system.scheduler) {
-          val responseText =
-            s"""
-               |${if (wrongGuess) wrongGuessStr else ""}
-               |$noOfCoinsStr *${currentState.userState.coinCount}*
-               |$levelStr ${currentState.gameState.level + 1}
-               |${createResponse(currentState.gameState)}
-               |$enterYourResponseStr
-          """.stripMargin
-
-          request(SendMessage(msg.source, responseText, replyMarkup = Some(ReplyKeyboardMarkup(
+        for {
+          _ <- request(SendPhoto(msg.source, FileId(currentLevel.get.fileId)))
+          isShowCharsAllowed = currentState.gameState.revealedChars.forall(_ == false)
+          responseText =
+          s"""
+             |${if (wrongGuess) wrongGuessStr else ""}
+             |$levelStr ${currentState.gameState.level + 1}
+             |$noOfCoinsStr *${getCoinString(currentState.userState.coinCount)}*
+             |${createResponse(currentState.gameState)}
+             |$enterYourResponseStr
+          """.stripMargin.trim
+          _ <- request(SendMessage(msg.source, responseText, replyMarkup = Some(ReplyKeyboardMarkup(
             Seq(
               if (isShowCharsAllowed)
                 Seq(
@@ -57,12 +64,12 @@ trait GameHelper extends StateHelper with LevelHelper {
                 )
             )
           ))))
-        }
+        } yield ()
       }
     }
   }
 
-  def successGuess(implicit msg: Message): Unit = {
+  def successGuess(implicit msg: Message): Future[Unit] = {
     nextLevel
 
     withCurrentState { (currentState, _) =>
@@ -72,7 +79,7 @@ trait GameHelper extends StateHelper with LevelHelper {
         .copy(userState = currentState.userState.copy(coinCount = currentCoin + wonCoin))
 
       setChatState(newState)
-      request(SendMessage(msg.source, wonStr(wonCoin)))
+      request(SendMessage(msg.source, wonStr(wonCoin))).map(_ => ())
     }
   }
 
