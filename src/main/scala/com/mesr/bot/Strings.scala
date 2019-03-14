@@ -58,7 +58,7 @@ object Strings {
     """.stripMargin.trim
 
   def showWordStr(response: String): String = "جواب: *" + response + "*"
-  def wonStr(wonCoin: Int): String = "*حدس شما درست بود. شما برنده " + getCoinString(wonCoin) + " آفتابه شدید.*"
+  def wonStr(wonCoin: Int): String = "*حدس شما درست بود. شما برنده " + wonCoin + " آفتابه شدید.*"
 
   def getCoinEnumSeq(count: Int): List[Int] = {
     val type1 = count / 8 // 7-dast
