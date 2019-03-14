@@ -24,7 +24,13 @@ trait InviteHelper extends StateHelper with TelegramBot {
         Future.successful(setChatState(newState))
       }
 
-      request(SendMessage(msg.source, enterInviteCodeStr))
+      request(SendMessage(msg.source, enterInviteCodeStr, replyMarkup = Some(ReplyKeyboardMarkup(
+        Seq(
+          Seq(
+            KeyboardButton(returnButtonStr)
+          )
+        )
+      ))))
     }
   }
 
