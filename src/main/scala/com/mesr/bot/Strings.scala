@@ -84,7 +84,7 @@ object Strings {
       case _ => ""
     }
 
-    if (str.trim.nonEmpty) "هیچی آفتابه نداری!" else str.trim
+    if (str.trim.isEmpty) "هیچی آفتابه نداری!" else str.trim
   }
 
   def coinBuyButtonStr(coinCount: Int): String = "خرید " + getCoinString(coinCount)
