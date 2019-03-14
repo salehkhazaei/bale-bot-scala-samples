@@ -73,7 +73,7 @@ object Strings {
   }
 
   def getCoinString(count: Int): String = {
-    getCoinEnumSeq(count) match {
+    val str = getCoinEnumSeq(count) match {
       case type1 :: type2 :: type3 :: type4 :: Nil =>
         val str1 = if(type1 > 0) Some(type1 + " بسته هفت دست آفتابه لگن") else None
         val str2 = if(type2 > 0) Some("یک دست آفتابه لگن") else None
@@ -83,6 +83,8 @@ object Strings {
         Seq(str1, str2, str3, str4).flatten.mkString(" و ")
       case _ => ""
     }
+
+    if (str.trim.nonEmpty) "هیچی آفتابه نداری!" else str.trim
   }
 
   def coinBuyButtonStr(coinCount: Int): String = "خرید " + getCoinString(coinCount)
